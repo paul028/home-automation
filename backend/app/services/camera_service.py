@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, distinct
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.camera import Camera
@@ -13,7 +13,17 @@ class CameraService:
         self._db = db
 
     async def get_all(self) -> list[Camera]:
-        result = await self._db.execute(select(Camera).order_by(Camera.id))
+        result = await self._db.execute(
+            select(Camera).order_by(Camera.location, Camera.id)
+        )
+        return list(result.scalars().all())
+
+    async def get_locations(self) -> list[str]:
+        result = await self._db.execute(
+            select(distinct(Camera.location))
+            .where(Camera.location.isnot(None))
+            .order_by(Camera.location)
+        )
         return list(result.scalars().all())
 
     async def get_by_id(self, camera_id: int) -> Camera:

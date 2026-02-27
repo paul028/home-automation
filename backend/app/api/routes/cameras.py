@@ -24,6 +24,13 @@ async def list_cameras(
     return await service.get_all()
 
 
+@router.get("/locations")
+async def list_locations(
+    service: CameraService = Depends(get_camera_service),
+) -> list[str]:
+    return await service.get_locations()
+
+
 @router.get("/{camera_id}", response_model=CameraDetailResponse)
 async def get_camera(
     camera_id: int,

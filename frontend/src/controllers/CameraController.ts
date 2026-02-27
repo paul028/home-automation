@@ -4,8 +4,18 @@ import { cameraApi } from "../services/api";
 
 export function useCameraController() {
   const [cameras, setCameras] = useState<Camera[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchLocations = useCallback(async () => {
+    try {
+      const data = await cameraApi.getLocations();
+      setLocations(data);
+    } catch {
+      // Non-critical, ignore
+    }
+  }, []);
 
   const fetchCameras = useCallback(async () => {
     try {
@@ -49,9 +59,25 @@ export function useCameraController() {
     [fetchCameras]
   );
 
+  const updateCameraLocation = useCallback(
+    async (id: number, location: string) => {
+      try {
+        setError(null);
+        await cameraApi.update(id, { location: location || null });
+        await fetchCameras();
+        await fetchLocations();
+      } catch (err) {
+        setError("Failed to update location");
+        console.error(err);
+      }
+    },
+    [fetchCameras, fetchLocations]
+  );
+
   useEffect(() => {
     fetchCameras();
-  }, [fetchCameras]);
+    fetchLocations();
+  }, [fetchCameras, fetchLocations]);
 
-  return { cameras, loading, error, fetchCameras, addCamera, deleteCamera };
+  return { cameras, locations, loading, error, fetchCameras, addCamera, deleteCamera, updateCameraLocation };
 }

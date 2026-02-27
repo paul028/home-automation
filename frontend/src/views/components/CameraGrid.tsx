@@ -1,12 +1,31 @@
+import { useMemo } from "react";
 import type { Camera } from "../../models/Camera";
 import CameraCard from "./CameraCard";
 
 interface Props {
   cameras: Camera[];
   onDelete: (id: number) => void;
+  onUpdateLocation: (id: number, location: string) => void;
+  locations: string[];
 }
 
-export default function CameraGrid({ cameras, onDelete }: Props) {
+export default function CameraGrid({ cameras, onDelete, onUpdateLocation, locations }: Props) {
+  const grouped = useMemo(() => {
+    const groups: Record<string, Camera[]> = {};
+    for (const camera of cameras) {
+      const key = camera.location || "Ungrouped";
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(camera);
+    }
+    // Sort: named locations first alphabetically, "Ungrouped" last
+    const sorted = Object.entries(groups).sort(([a], [b]) => {
+      if (a === "Ungrouped") return 1;
+      if (b === "Ungrouped") return -1;
+      return a.localeCompare(b);
+    });
+    return sorted;
+  }, [cameras]);
+
   if (cameras.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-700 py-16 text-gray-500">
@@ -30,9 +49,27 @@ export default function CameraGrid({ cameras, onDelete }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {cameras.map((camera) => (
-        <CameraCard key={camera.id} camera={camera} onDelete={onDelete} />
+    <div className="space-y-8">
+      {grouped.map(([location, locationCameras]) => (
+        <div key={location}>
+          <h3 className="mb-3 text-sm font-medium uppercase tracking-wider text-gray-500">
+            {location}
+            <span className="ml-2 text-gray-600">
+              ({locationCameras.length})
+            </span>
+          </h3>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {locationCameras.map((camera) => (
+              <CameraCard
+                key={camera.id}
+                camera={camera}
+                onDelete={onDelete}
+                onUpdateLocation={onUpdateLocation}
+                locations={locations}
+              />
+            ))}
+          </div>
+        </div>
       ))}
     </div>
   );

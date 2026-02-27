@@ -4,7 +4,7 @@ import CameraGrid from "../components/CameraGrid";
 import AddCameraModal from "../components/AddCameraModal";
 
 export default function DashboardPage() {
-  const { cameras, loading, error, addCamera, deleteCamera } =
+  const { cameras, locations, loading, error, addCamera, deleteCamera, updateCameraLocation } =
     useCameraController();
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -55,13 +55,19 @@ export default function DashboardPage() {
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-600 border-t-blue-500" />
         </div>
       ) : (
-        <CameraGrid cameras={cameras} onDelete={handleDelete} />
+        <CameraGrid
+          cameras={cameras}
+          onDelete={handleDelete}
+          onUpdateLocation={updateCameraLocation}
+          locations={locations}
+        />
       )}
 
       <AddCameraModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSubmit={addCamera}
+        locations={locations}
       />
     </div>
   );

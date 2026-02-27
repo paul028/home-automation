@@ -3,6 +3,7 @@ export interface Camera {
   name: string;
   ip_address: string;
   model: string | null;
+  location: string | null;
   brand: string;
   has_ptz: boolean;
   has_recording: boolean;
@@ -19,6 +20,7 @@ export interface CameraCreate {
   username: string;
   password: string;
   model?: string;
+  location?: string;
   brand?: string;
   has_ptz?: boolean;
   has_recording?: boolean;
@@ -30,6 +32,7 @@ export interface CameraUpdate {
   username?: string;
   password?: string;
   model?: string;
+  location?: string;
   has_ptz?: boolean;
   has_recording?: boolean;
   is_active?: boolean;

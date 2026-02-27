@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useStreamController } from "../../controllers/StreamController";
 import { cameraApi } from "../../services/api";
@@ -6,18 +6,35 @@ import type { Camera } from "../../models/Camera";
 import LivePlayer from "../components/LivePlayer";
 import PTZControls from "../components/PTZControls";
 import RecordingPlayer from "../components/RecordingPlayer";
+import EditableField from "../components/EditableField";
 
 export default function CameraDetailPage() {
   const { id } = useParams<{ id: string }>();
   const cameraId = Number(id);
   const { streamInfo, fetchStream } = useStreamController();
   const [camera, setCamera] = useState<Camera | null>(null);
+  const [locations, setLocations] = useState<string[]>([]);
 
   useEffect(() => {
     if (!cameraId) return;
     cameraApi.getById(cameraId).then(setCamera).catch(console.error);
+    cameraApi.getLocations().then(setLocations).catch(() => {});
     fetchStream(cameraId);
   }, [cameraId, fetchStream]);
+
+  const updateField = useCallback(
+    async (field: string, value: string) => {
+      if (!camera) return;
+      const updated = await cameraApi.update(camera.id, {
+        [field]: value || null,
+      });
+      setCamera(updated);
+      if (field === "location") {
+        cameraApi.getLocations().then(setLocations).catch(() => {});
+      }
+    },
+    [camera]
+  );
 
   if (!camera) {
     return (
@@ -100,6 +117,17 @@ export default function CameraDetailPage() {
               <div className="flex justify-between">
                 <dt className="text-gray-500">Model</dt>
                 <dd>{camera.model || "—"}</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-gray-500">Location</dt>
+                <dd>
+                  <EditableField
+                    value={camera.location || ""}
+                    placeholder="Set location"
+                    onSave={(v) => updateField("location", v)}
+                    suggestions={locations}
+                  />
+                </dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-gray-500">PTZ</dt>

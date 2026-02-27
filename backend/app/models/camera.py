@@ -11,6 +11,7 @@ class Camera(Base):
     username = Column(String, nullable=False)
     password = Column(String, nullable=False)
     model = Column(String, nullable=True)
+    location = Column(String, nullable=True)
     brand = Column(String, nullable=False, default="tapo")
     has_ptz = Column(Boolean, default=False)
     has_recording = Column(Boolean, default=True)

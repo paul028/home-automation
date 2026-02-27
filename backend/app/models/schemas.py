@@ -7,6 +7,7 @@ class CameraCreate(BaseModel):
     username: str = Field(..., min_length=1)
     password: str = Field(..., min_length=1)
     model: str | None = None
+    location: str | None = None
     brand: str = "tapo"
     has_ptz: bool = False
     has_recording: bool = True
@@ -18,6 +19,7 @@ class CameraUpdate(BaseModel):
     username: str | None = None
     password: str | None = None
     model: str | None = None
+    location: str | None = None
     has_ptz: bool | None = None
     has_recording: bool | None = None
     is_active: bool | None = None
@@ -28,6 +30,7 @@ class CameraResponse(BaseModel):
     name: str
     ip_address: str
     model: str | None
+    location: str | None
     brand: str
     has_ptz: bool
     has_recording: bool

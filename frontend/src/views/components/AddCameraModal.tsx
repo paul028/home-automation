@@ -5,15 +5,17 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CameraCreate) => Promise<void>;
+  locations: string[];
 }
 
-export default function AddCameraModal({ isOpen, onClose, onSubmit }: Props) {
+export default function AddCameraModal({ isOpen, onClose, onSubmit, locations }: Props) {
   const [form, setForm] = useState<CameraCreate>({
     name: "",
     ip_address: "",
     username: "",
     password: "",
     model: "",
+    location: "",
     brand: "tapo",
     has_ptz: false,
     has_recording: true,
@@ -26,13 +28,18 @@ export default function AddCameraModal({ isOpen, onClose, onSubmit }: Props) {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await onSubmit(form);
+      const submitData = {
+        ...form,
+        location: form.location || undefined,
+      };
+      await onSubmit(submitData);
       setForm({
         name: "",
         ip_address: "",
         username: "",
         password: "",
         model: "",
+        location: "",
         brand: "tapo",
         has_ptz: false,
         has_recording: true,
@@ -133,17 +140,39 @@ export default function AddCameraModal({ isOpen, onClose, onSubmit }: Props) {
             </div>
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm text-gray-400">
-              Model (optional)
-            </label>
-            <input
-              type="text"
-              className={inputClass}
-              placeholder="C220, C520WS, etc."
-              value={form.model}
-              onChange={(e) => setForm({ ...form, model: e.target.value })}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1 block text-sm text-gray-400">
+                Model (optional)
+              </label>
+              <input
+                type="text"
+                className={inputClass}
+                placeholder="C220, C520WS, etc."
+                value={form.model}
+                onChange={(e) => setForm({ ...form, model: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-gray-400">
+                Location (optional)
+              </label>
+              <input
+                type="text"
+                list="location-options"
+                className={inputClass}
+                placeholder="Living Room, Front Yard..."
+                value={form.location}
+                onChange={(e) =>
+                  setForm({ ...form, location: e.target.value })
+                }
+              />
+              <datalist id="location-options">
+                {locations.map((loc) => (
+                  <option key={loc} value={loc} />
+                ))}
+              </datalist>
+            </div>
           </div>
 
           <div className="flex gap-6">

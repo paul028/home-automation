@@ -29,6 +29,9 @@ export const cameraApi = {
     api
       .get<{ id: string; name: string }[]>(`/cameras/${id}/presets`)
       .then((r) => r.data),
+
+  getLocations: () =>
+    api.get<string[]>("/cameras/locations").then((r) => r.data),
 };
 
 export const streamApi = {
