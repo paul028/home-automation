@@ -1,9 +1,12 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.dependencies import get_camera_service, get_stream_service
+
+logger = logging.getLogger(__name__)
 from app.core.exceptions import DeviceNotFoundError, DeviceConnectionError
-from app.core.interfaces.controllable import PTZDirection, PTZAction
-from app.devices.tapo.tapo_camera import TapoCamera
+from app.services.device_pool import device_pool, ptz_pool
 from app.models.schemas import (
     CameraCreate,
     CameraUpdate,
@@ -64,8 +67,10 @@ async def update_camera(
     stream_service: StreamService = Depends(get_stream_service),
 ):
     try:
+        old_camera = await camera_service.get_by_id(camera_id)
         camera = await camera_service.update(camera_id, data)
         if data.ip_address or data.username or data.password:
+            device_pool.invalidate(old_camera.ip_address)
             try:
                 await stream_service.register_stream(camera)
             except Exception:
@@ -83,6 +88,7 @@ async def delete_camera(
 ):
     try:
         camera = await camera_service.get_by_id(camera_id)
+        device_pool.invalidate(camera.ip_address)
         await stream_service.unregister_stream(camera)
         await camera_service.delete(camera_id)
     except DeviceNotFoundError as e:
@@ -104,24 +110,17 @@ async def ptz_control(
     if not camera.has_ptz:
         raise HTTPException(status_code=400, detail="Camera does not support PTZ")
 
-    tapo = TapoCamera(
-        ip=camera.ip_address,
-        username=camera.username,
-        password=camera.password,
-        name=camera.name,
-    )
-
     try:
-        await tapo.connect()
-        await tapo.move(
-            PTZDirection(command.direction),
-            PTZAction(command.action),
-        )
+        ptz = await ptz_pool.get(camera)
+        if command.action == "stop":
+            await ptz.stop()
+        else:
+            await ptz.move(command.direction)
         return {"status": "ok"}
-    except DeviceConnectionError as e:
-        raise HTTPException(status_code=503, detail=str(e))
-    finally:
-        await tapo.disconnect()
+    except Exception as e:
+        ptz_pool.invalidate(camera.ip_address)
+        logger.error("PTZ error for camera %s: %s", camera_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"PTZ command failed: {e}")
 
 
 @router.get("/{camera_id}/presets")
@@ -135,15 +134,10 @@ async def get_presets(
     except DeviceNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-    tapo = TapoCamera(
-        ip=camera.ip_address,
-        username=camera.username,
-        password=camera.password,
-        name=camera.name,
-    )
-
     try:
-        await tapo.connect()
+        tapo = await device_pool.get(camera)
         return await tapo.get_presets()
-    finally:
-        await tapo.disconnect()
+    except Exception as e:
+        device_pool.invalidate(camera.ip_address)
+        logger.error("Presets error for camera %s: %s", camera_id, e)
+        raise HTTPException(status_code=500, detail=f"Failed to get presets: {e}")

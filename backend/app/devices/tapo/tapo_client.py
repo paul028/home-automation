@@ -1,3 +1,5 @@
+import asyncio
+
 from pytapo import Tapo
 
 from app.core.exceptions import DeviceConnectionError, DeviceAuthenticationError
@@ -15,7 +17,10 @@ class TapoClient:
     async def connect(self) -> Tapo:
         """Create and return a pytapo client instance."""
         try:
-            self._client = Tapo(self._ip, self._username, self._password)
+            self._client = await asyncio.to_thread(
+                Tapo, self._ip, self._username, self._password,
+                self._password,  # cloudPassword required for newer firmware
+            )
             return self._client
         except Exception as e:
             error_msg = str(e).lower()

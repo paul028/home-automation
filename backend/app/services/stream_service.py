@@ -1,8 +1,13 @@
+import logging
+from urllib.parse import quote
+
 import httpx
 
 from app.config import settings
 from app.core.exceptions import StreamError
 from app.models.camera import Camera
+
+logger = logging.getLogger(__name__)
 
 
 class StreamService:
@@ -14,19 +19,29 @@ class StreamService:
     def _stream_name(self, camera: Camera) -> str:
         return f"camera_{camera.id}"
 
+    @staticmethod
+    def _encode_cred(value: str) -> str:
+        """URL-encode credentials (handles @, :, etc.)."""
+        return quote(value, safe="")
+
     async def register_stream(self, camera: Camera) -> None:
-        """Register a camera's RTSP stream with go2rtc."""
+        """Register a camera's RTSP stream (and ONVIF for PTZ) with go2rtc."""
         stream_name = self._stream_name(camera)
-        rtsp_url = (
-            f"rtsp://{camera.username}:{camera.password}"
-            f"@{camera.ip_address}:554/stream1"
-        )
+        user = self._encode_cred(camera.username)
+        pwd = self._encode_cred(camera.password)
+        rtsp_url = f"rtsp://{user}:{pwd}@{camera.ip_address}:554/stream1"
+
+        # Build list of sources — RTSP always, ONVIF for PTZ cameras
+        sources = [rtsp_url]
+        if camera.has_ptz:
+            sources.append(f"onvif://{user}:{pwd}@{camera.ip_address}:2020")
 
         try:
             async with httpx.AsyncClient() as client:
+                # go2rtc PUT replaces all sources, so pass all in one call
                 response = await client.put(
                     f"{self._go2rtc_url}/api/streams",
-                    params={"name": stream_name, "src": rtsp_url},
+                    params=[("name", stream_name)] + [("src", s) for s in sources],
                 )
                 if response.status_code >= 400:
                     raise StreamError(

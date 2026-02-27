@@ -1,3 +1,4 @@
+import asyncio
 from datetime import date
 
 from app.core.interfaces.device import IDevice
@@ -27,7 +28,7 @@ class TapoCamera(IDevice, IStreamable, IControllable, IRecordable):
     async def get_status(self) -> dict:
         try:
             client = self._tapo_client.client
-            info = client.getBasicInfo()
+            info = await asyncio.to_thread(client.getBasicInfo)
             return {
                 "online": True,
                 "device_info": info,
@@ -35,10 +36,10 @@ class TapoCamera(IDevice, IStreamable, IControllable, IRecordable):
         except Exception:
             return {"online": False}
 
-    def get_device_info(self) -> dict:
+    async def get_device_info(self) -> dict:
         try:
             client = self._tapo_client.client
-            info = client.getBasicInfo()
+            info = await asyncio.to_thread(client.getBasicInfo)
             return {
                 "name": self._name,
                 "model": info.get("device_info", {})
@@ -72,15 +73,15 @@ class TapoCamera(IDevice, IStreamable, IControllable, IRecordable):
             return
 
         direction_map = {
-            PTZDirection.UP: lambda: client.moveMotor(0, 10),
-            PTZDirection.DOWN: lambda: client.moveMotor(0, -10),
-            PTZDirection.LEFT: lambda: client.moveMotor(-10, 0),
-            PTZDirection.RIGHT: lambda: client.moveMotor(10, 0),
+            PTZDirection.UP: (0, 10),
+            PTZDirection.DOWN: (0, -10),
+            PTZDirection.LEFT: (-10, 0),
+            PTZDirection.RIGHT: (10, 0),
         }
 
-        move_fn = direction_map.get(direction)
-        if move_fn:
-            move_fn()
+        coords = direction_map.get(direction)
+        if coords:
+            await asyncio.to_thread(client.moveMotor, coords[0], coords[1])
 
     async def stop(self) -> None:
         pass  # pytapo movement commands are discrete steps, no continuous stop needed
@@ -88,7 +89,7 @@ class TapoCamera(IDevice, IStreamable, IControllable, IRecordable):
     async def get_presets(self) -> list[dict]:
         try:
             client = self._tapo_client.client
-            presets = client.getPresets()
+            presets = await asyncio.to_thread(client.getPresets)
             return [
                 {"id": str(k), "name": v}
                 for k, v in presets.items()
@@ -98,14 +99,14 @@ class TapoCamera(IDevice, IStreamable, IControllable, IRecordable):
 
     async def go_to_preset(self, preset_id: str) -> None:
         client = self._tapo_client.client
-        client.setPreset(preset_id)
+        await asyncio.to_thread(client.setPreset, preset_id)
 
     # IRecordable
 
     async def get_recordings(self, recording_date: date) -> list[dict]:
         try:
             client = self._tapo_client.client
-            recordings = client.getRecordings(recording_date)
+            recordings = await asyncio.to_thread(client.getRecordings, recording_date)
             results = []
             for rec in recordings:
                 results.append({
@@ -121,7 +122,7 @@ class TapoCamera(IDevice, IStreamable, IControllable, IRecordable):
         try:
             client = self._tapo_client.client
             search_date = date(year, month, 1)
-            recordings = client.getRecordings(search_date)
+            recordings = await asyncio.to_thread(client.getRecordings, search_date)
             days = set()
             for rec in recordings:
                 start = rec.get("startTime", "")
