@@ -104,8 +104,8 @@ class RecordingManager:
             "-loglevel", "warning",
             "-rtsp_transport", "tcp",
             "-i", rtsp_url,
-            "-an",              # drop audio (pcm_alaw not supported in MP4)
             "-c:v", "copy",     # video passthrough, no transcoding
+            "-c:a", "aac",      # transcode pcm_alaw → AAC for MP4
             "-f", "segment",
             "-segment_time", str(settings.recording_segment_seconds),
             "-strftime", "1",

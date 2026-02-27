@@ -31,10 +31,12 @@ class StreamService:
         pwd = self._encode_cred(camera.password)
         rtsp_url = f"rtsp://{user}:{pwd}@{camera.ip_address}:554/stream1"
 
-        # Build list of sources — RTSP always, ONVIF for PTZ cameras
+        # Build list of sources — RTSP always, ONVIF for PTZ cameras,
+        # ffmpeg audio transcoding (pcm_alaw → AAC) for browser MSE compatibility
         sources = [rtsp_url]
         if camera.has_ptz:
             sources.append(f"onvif://{user}:{pwd}@{camera.ip_address}:2020")
+        sources.append(f"ffmpeg:{stream_name}#audio=aac")
 
         try:
             async with httpx.AsyncClient() as client:
