@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:go2rtc.org)",
+      "WebFetch(domain:deepwiki.com)",
+      "Bash(git init)",
+      "Bash(pyenv versions)",
+      "Bash(brew install pyenv)",
+      "Bash(/opt/homebrew/bin/brew --version)",
+      "Bash(/usr/local/bin/brew --version)",
+      "Bash(export PATH=\"/opt/homebrew/bin:$PATH\")",
+      "Bash(node --version)",
+      "Bash(npm --version)",
+      "Bash(/opt/homebrew/bin/node --version)",
+      "Bash(/usr/local/bin/node --version)",
+      "Bash(npm create vite@latest frontend -- --template react-ts)",
+      "Bash(npm install)",
+      "Bash(npm install react-router-dom axios tailwindcss @tailwindcss/vite)",
+      "Bash(docker info)"
+    ]
+  }
+}

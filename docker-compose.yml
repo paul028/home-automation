@@ -1,0 +1,14 @@
+services:
+  go2rtc:
+    image: alexxit/go2rtc
+    container_name: go2rtc
+    restart: unless-stopped
+    ports:
+      - "1984:1984"   # API + web UI
+      - "8554:8554"   # RTSP
+      - "8555:8555/tcp" # WebRTC TCP
+      - "8555:8555/udp" # WebRTC UDP
+    volumes:
+      - ./go2rtc.yaml:/config/go2rtc.yaml
+    environment:
+      - TZ=Asia/Singapore

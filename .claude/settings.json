@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:8000/api/cameras)",
+      "Bash(curl -sv \"http://localhost:1984/api/streams?src=test_stream&name=test\" -X PUT)",
+      "Bash(curl -sv \"http://localhost:1984/api/streams?name=test&src=rtsp://test:test@192.168.68.69:554/stream1\" -X PUT)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl -s \"http://localhost:8000/api/streams/1\")",
+      "Bash(curl -s \"http://localhost:1984/api/streams\")",
+      "Bash(curl -s -X DELETE \"http://localhost:1984/api/streams?name=test\")"
+    ]
+  }
+}
