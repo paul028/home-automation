@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { Camera, CameraCreate, CameraUpdate } from "../models/Camera";
+import type { Camera, CameraDetail, CameraCreate, CameraUpdate } from "../models/Camera";
 import type { StreamInfo } from "../models/Stream";
 import type { RecordingSegment, RecordingDays } from "../models/Recording";
 
@@ -12,7 +12,7 @@ export const cameraApi = {
   getAll: () => api.get<Camera[]>("/cameras").then((r) => r.data),
 
   getById: (id: number) =>
-    api.get<Camera>(`/cameras/${id}`).then((r) => r.data),
+    api.get<CameraDetail>(`/cameras/${id}`).then((r) => r.data),
 
   create: (data: CameraCreate) =>
     api.post<Camera>("/cameras", data).then((r) => r.data),
