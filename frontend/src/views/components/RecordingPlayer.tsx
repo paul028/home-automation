@@ -4,9 +4,11 @@ import type { RecordingSegment } from "../../models/Recording";
 
 interface Props {
   cameraId: number;
+  onPlay?: (fileIds: string[], startIndex: number) => void;
+  activeFileId?: string | null;
 }
 
-export default function RecordingPlayer({ cameraId }: Props) {
+export default function RecordingPlayer({ cameraId, onPlay, activeFileId }: Props) {
   const { recordings, loading, fetchRecordings } = useRecordingController();
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -66,7 +68,11 @@ export default function RecordingPlayer({ cameraId }: Props) {
           {recordings.map((rec: RecordingSegment, i: number) => (
             <div
               key={i}
-              className="flex items-center justify-between rounded-md border border-gray-800 bg-gray-800/50 px-3 py-2"
+              className={`flex items-center justify-between rounded-md border px-3 py-2 ${
+                activeFileId === rec.file_id
+                  ? "border-blue-500 bg-blue-500/10"
+                  : "border-gray-800 bg-gray-800/50"
+              }`}
             >
               <div className="flex items-center gap-3">
                 <svg
@@ -80,9 +86,29 @@ export default function RecordingPlayer({ cameraId }: Props) {
                   {formatTime(rec.start_time)} - {formatTime(rec.end_time)}
                 </span>
               </div>
-              <span className="text-xs text-gray-500">
-                {formatDuration(rec.duration)}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-500">
+                  {formatDuration(rec.duration)}
+                </span>
+                {onPlay && (
+                  <button
+                    onClick={() => {
+                      // Recordings are displayed desc; build chronological playlist
+                      const chronological = [...recordings].reverse();
+                      const chronoIndex = chronological.findIndex(
+                        (r) => r.file_id === rec.file_id
+                      );
+                      onPlay(
+                        chronological.map((r) => r.file_id),
+                        chronoIndex >= 0 ? chronoIndex : 0
+                      );
+                    }}
+                    className="rounded-md bg-blue-600 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-500"
+                  >
+                    Review
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

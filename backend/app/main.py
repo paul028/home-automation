@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -8,12 +9,19 @@ from app.database import init_db
 from app.api.routes.cameras import router as cameras_router
 from app.api.routes.streams import router as streams_router
 from app.api.routes.recordings import router as recordings_router
+from app.services.recording_manager import recording_manager
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    if settings.recording_enabled:
+        logger.info("Starting continuous recording...")
+        await recording_manager.start()
     yield
+    await recording_manager.stop()
 
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)

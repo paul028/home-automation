@@ -14,6 +14,8 @@ export default function CameraDetailPage() {
   const { streamInfo, fetchStream } = useStreamController();
   const [camera, setCamera] = useState<Camera | null>(null);
   const [locations, setLocations] = useState<string[]>([]);
+  const [playlist, setPlaylist] = useState<string[] | null>(null);
+  const [playbackIndex, setPlaybackIndex] = useState(0);
 
   useEffect(() => {
     if (!cameraId) return;
@@ -75,7 +77,36 @@ export default function CameraDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          {streamInfo ? (
+          {playlist ? (
+            <div className="relative">
+              <video
+                key={playlist[playbackIndex]}
+                controls
+                autoPlay
+                className="aspect-video w-full rounded-lg bg-black object-contain"
+                src={`/api/recordings/play/${playlist[playbackIndex]}`}
+                onEnded={() => {
+                  if (playbackIndex < playlist.length - 1) {
+                    setPlaybackIndex(playbackIndex + 1);
+                  }
+                }}
+              />
+              <div className="absolute left-3 top-3 flex items-center gap-2">
+                <button
+                  onClick={() => { setPlaylist(null); setPlaybackIndex(0); }}
+                  className="flex items-center gap-1.5 rounded-md bg-gray-900/80 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition-colors hover:bg-gray-800"
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to Live
+                </button>
+                <span className="rounded-md bg-gray-900/80 px-2.5 py-1.5 text-xs text-gray-300 backdrop-blur">
+                  {playbackIndex + 1} / {playlist.length}
+                </span>
+              </div>
+            </div>
+          ) : streamInfo ? (
             <LivePlayer
               mseUrl={streamInfo.mse_url}
               className="aspect-video"
@@ -144,7 +175,14 @@ export default function CameraDetailPage() {
 
       {camera.has_recording && (
         <div className="mt-6">
-          <RecordingPlayer cameraId={camera.id} />
+          <RecordingPlayer
+            cameraId={camera.id}
+            activeFileId={playlist?.[playbackIndex] ?? null}
+            onPlay={(fileIds, startIndex) => {
+              setPlaylist(fileIds);
+              setPlaybackIndex(startIndex);
+            }}
+          />
         </div>
       )}
     </div>
