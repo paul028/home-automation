@@ -1,0 +1,15 @@
+api:
+  listen: ":1984"
+  origin: "*"
+
+webrtc:
+  listen: ":8555"
+
+# Streams are auto-registered by the backend when you add cameras.
+# You can also pre-configure them here if preferred.
+# The ffmpeg source transcodes camera audio (pcm_alaw) to AAC for browser compatibility.
+streams:
+  camera_1:
+    - rtsp://username:password@192.168.1.100:554/stream1
+    - onvif://username:password@192.168.1.100:2020
+    - ffmpeg:camera_1#audio=aac
