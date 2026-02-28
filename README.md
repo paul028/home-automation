@@ -281,6 +281,50 @@ npm run dev
 
 Open **http://localhost:5173** in your browser.
 
+## Testing
+
+The backend has a comprehensive unit test suite using **pytest** with async support. Tests are fully isolated using in-memory SQLite and mocks — no running services required.
+
+```bash
+cd backend
+source .venv/bin/activate    # Windows: .venv\Scripts\Activate.ps1
+python -m pytest
+```
+
+Run with verbose output:
+
+```bash
+python -m pytest -v
+```
+
+Run a specific test file:
+
+```bash
+python -m pytest tests/services/test_camera_service.py -v
+```
+
+### Test structure
+
+```
+tests/
+├── conftest.py                      # Shared fixtures (in-memory DB, camera factory)
+├── api/
+│   ├── test_cameras_route.py        # Camera endpoints (CRUD, PTZ, error handling)
+│   ├── test_streams_route.py        # Stream info and listing endpoints
+│   └── test_recordings_route.py     # Recording playback, Range header parsing
+├── services/
+│   ├── test_camera_service.py       # Camera CRUD operations
+│   ├── test_stream_service.py       # go2rtc registration and URL generation
+│   ├── test_recording_service.py    # Google Drive recording retrieval
+│   ├── test_recording_manager.py    # ffmpeg lifecycle, upload, folder caching
+│   ├── test_gdrive_service.py       # Google Drive API wrapper
+│   └── test_device_pool.py         # Connection pooling, TTL, suspension
+└── devices/
+    ├── test_tapo_camera.py          # TapoCamera (all 4 SOLID interfaces)
+    ├── test_tapo_client.py          # pytapo wrapper (connect, auth, RTSP URLs)
+    └── test_onvif_ptz.py            # ONVIF PTZ (move, stop, direction map)
+```
+
 ## Usage
 
 1. Click **Add Camera** on the dashboard
@@ -343,6 +387,8 @@ Open **http://localhost:5173** in your browser.
 │   │       ├── camera.py            # SQLAlchemy ORM model
 │   │       └── schemas.py           # Pydantic request/response schemas
 │   ├── requirements.txt
+│   ├── pytest.ini                   # pytest configuration
+│   ├── tests/                       # Unit tests (139 tests, pytest + pytest-asyncio)
 │   └── .python-version              # pyenv 3.11.5
 ├── frontend/
 │   ├── src/
