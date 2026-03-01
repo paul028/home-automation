@@ -15,4 +15,5 @@ class Camera(Base):
     brand = Column(String, nullable=False, default="tapo")
     has_ptz = Column(Boolean, default=False)
     has_recording = Column(Boolean, default=True)
+    recording_segment_seconds = Column(Integer, nullable=True, default=None)
     is_active = Column(Boolean, default=True)

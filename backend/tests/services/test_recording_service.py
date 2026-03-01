@@ -155,6 +155,49 @@ class TestGetRecordings:
             # Assert
             assert result[0]["file_id"] == EXPECTED_FILE_ID
 
+    async def test_get_recordings_PerCameraSegmentSeconds_UsesCustomDuration(
+        self, make_camera
+    ):
+        # Arrange
+        service = RecordingService()
+        CUSTOM_SECONDS = 60
+        camera = make_camera(name="Front Yard", recording_segment_seconds=CUSTOM_SECONDS)
+        files = [{"id": "f1", "name": "10:00:00.mp4"}]
+        mock_gdrive = _make_gdrive_mock(files=files)
+
+        with patch("app.services.recording_service._get_gdrive", return_value=mock_gdrive), \
+             patch("app.services.recording_service.settings") as mock_settings:
+            mock_settings.gdrive_folder_id = "root_id"
+            mock_settings.recording_segment_seconds = 300
+
+            # Act
+            result = await service.get_recordings(camera, date(2026, 2, 28))
+
+            # Assert
+            assert result[0]["duration"] == CUSTOM_SECONDS
+            assert result[0]["end_time"] == "10:01:00"
+
+    async def test_get_recordings_NullPerCameraSegment_FallsBackToGlobal(
+        self, make_camera
+    ):
+        # Arrange
+        service = RecordingService()
+        GLOBAL_SECONDS = 300
+        camera = make_camera(name="Front Yard", recording_segment_seconds=None)
+        files = [{"id": "f1", "name": "10:00:00.mp4"}]
+        mock_gdrive = _make_gdrive_mock(files=files)
+
+        with patch("app.services.recording_service._get_gdrive", return_value=mock_gdrive), \
+             patch("app.services.recording_service.settings") as mock_settings:
+            mock_settings.gdrive_folder_id = "root_id"
+            mock_settings.recording_segment_seconds = GLOBAL_SECONDS
+
+            # Act
+            result = await service.get_recordings(camera, date(2026, 2, 28))
+
+            # Assert
+            assert result[0]["duration"] == GLOBAL_SECONDS
+
 
 # ---------------------------------------------------------------------------
 # get_recording_days

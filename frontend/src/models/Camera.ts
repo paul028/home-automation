@@ -7,6 +7,7 @@ export interface Camera {
   brand: string;
   has_ptz: boolean;
   has_recording: boolean;
+  recording_segment_seconds: number | null;
   is_active: boolean;
 }
 
@@ -24,6 +25,7 @@ export interface CameraCreate {
   brand?: string;
   has_ptz?: boolean;
   has_recording?: boolean;
+  recording_segment_seconds?: number | null;
 }
 
 export interface CameraUpdate {
@@ -35,5 +37,6 @@ export interface CameraUpdate {
   location?: string;
   has_ptz?: boolean;
   has_recording?: boolean;
+  recording_segment_seconds?: number | null;
   is_active?: boolean;
 }

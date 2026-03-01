@@ -11,6 +11,7 @@ class CameraCreate(BaseModel):
     brand: str = "tapo"
     has_ptz: bool = False
     has_recording: bool = True
+    recording_segment_seconds: int | None = None
 
 
 class CameraUpdate(BaseModel):
@@ -22,6 +23,7 @@ class CameraUpdate(BaseModel):
     location: str | None = None
     has_ptz: bool | None = None
     has_recording: bool | None = None
+    recording_segment_seconds: int | None = None
     is_active: bool | None = None
 
 
@@ -34,6 +36,7 @@ class CameraResponse(BaseModel):
     brand: str
     has_ptz: bool
     has_recording: bool
+    recording_segment_seconds: int | None
     is_active: bool
 
     model_config = {"from_attributes": True}

@@ -77,6 +77,7 @@ def make_camera():
             "brand": "tapo",
             "has_ptz": True,
             "has_recording": True,
+            "recording_segment_seconds": None,
             "is_active": True,
         }
         defaults.update(overrides)

@@ -9,6 +9,7 @@ interface CameraForm {
   location: string;
   has_ptz: boolean;
   has_recording: boolean;
+  recording_segment_seconds: string;
 }
 
 export default function SettingsPage() {
@@ -56,6 +57,10 @@ export default function SettingsPage() {
         location: detail.location || "",
         has_ptz: detail.has_ptz,
         has_recording: detail.has_recording,
+        recording_segment_seconds:
+          detail.recording_segment_seconds != null
+            ? String(detail.recording_segment_seconds)
+            : "",
       });
     } catch (err) {
       console.error("Failed to load camera details:", err);
@@ -74,6 +79,9 @@ export default function SettingsPage() {
         location: form.location || undefined,
         has_ptz: form.has_ptz,
         has_recording: form.has_recording,
+        recording_segment_seconds: form.recording_segment_seconds
+          ? parseInt(form.recording_segment_seconds, 10)
+          : null,
       };
       if (form.password) {
         update.password = form.password;
@@ -248,6 +256,28 @@ export default function SettingsPage() {
                           />
                           Recording
                         </label>
+                        {form.has_recording && (
+                          <div className="flex items-center gap-2">
+                            <label className="text-sm text-gray-400">
+                              Segment
+                            </label>
+                            <input
+                              type="number"
+                              min={10}
+                              step={10}
+                              className="w-20 rounded-md border border-gray-700 bg-gray-800 px-2 py-1 text-sm text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+                              placeholder="300"
+                              value={form.recording_segment_seconds}
+                              onChange={(e) =>
+                                setForm({
+                                  ...form,
+                                  recording_segment_seconds: e.target.value,
+                                })
+                              }
+                            />
+                            <span className="text-xs text-gray-500">sec</span>
+                          </div>
+                        )}
                       </div>
                       <div className="flex gap-3">
                         <button

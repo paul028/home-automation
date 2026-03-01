@@ -61,8 +61,12 @@ class RecordingService:
                 continue
 
             h, m, s = int(match.group(1)), int(match.group(2)), int(match.group(3))
+            segment_secs = (
+                getattr(camera, "recording_segment_seconds", None)
+                or settings.recording_segment_seconds
+            )
             start_seconds = h * 3600 + m * 60 + s
-            end_seconds = start_seconds + settings.recording_segment_seconds
+            end_seconds = start_seconds + segment_secs
 
             end_h = (end_seconds // 3600) % 24
             end_m = (end_seconds % 3600) // 60
@@ -72,7 +76,7 @@ class RecordingService:
                 "file_id": f["id"],
                 "start_time": f"{h:02d}:{m:02d}:{s:02d}",
                 "end_time": f"{end_h:02d}:{end_m:02d}:{end_s:02d}",
-                "duration": settings.recording_segment_seconds,
+                "duration": segment_secs,
             })
 
         segments.sort(key=lambda s: s["start_time"], reverse=True)

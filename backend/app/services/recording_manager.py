@@ -28,6 +28,8 @@ class RecordingManager:
         self._running = False
         # Cache: camera_id → camera name (for Drive folder names)
         self._camera_names: dict[int, str] = {}
+        # Cache: camera_id → segment duration in seconds
+        self._segment_seconds: dict[int, int] = {}
         # Cache: (camera_name) → Drive folder ID, (camera_name, date_str) → Drive folder ID
         self._folder_cache: dict[str, str] = {}
 
@@ -52,15 +54,22 @@ class RecordingManager:
                 "Google Drive not configured — recordings will stay local only"
             )
 
-        # Fetch all active cameras
+        # Fetch all active cameras with recording enabled
         async with async_session() as db:
             result = await db.execute(
-                select(Camera).where(Camera.is_active.is_(True))
+                select(Camera).where(
+                    Camera.is_active.is_(True),
+                    Camera.has_recording.is_(True),
+                )
             )
             cameras = list(result.scalars().all())
 
         for camera in cameras:
             self._camera_names[camera.id] = camera.name
+            self._segment_seconds[camera.id] = (
+                camera.recording_segment_seconds
+                or settings.recording_segment_seconds
+            )
             await self._start_camera(camera.id)
 
         # Start background workers
@@ -107,7 +116,9 @@ class RecordingManager:
             "-c:v", "copy",     # video passthrough, no transcoding
             "-c:a", "aac",      # transcode pcm_alaw → AAC for MP4
             "-f", "segment",
-            "-segment_time", str(settings.recording_segment_seconds),
+            "-segment_time", str(self._segment_seconds.get(
+                camera_id, settings.recording_segment_seconds
+            )),
             "-strftime", "1",
             "-reset_timestamps", "1",
             output_pattern,
