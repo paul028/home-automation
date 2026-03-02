@@ -31,7 +31,7 @@ Tapo Camera (RTSP/ONVIF)
 - **Streaming**: go2rtc converts RTSP to WebRTC/MSE (~0.5s latency)
 - **Audio**: ffmpeg transcodes pcm_alaw (G.711) → AAC for browser compatibility
 - **PTZ**: ONVIF RelativeMove for discrete micro-movements per click
-- **Database**: SQLite via async SQLAlchemy
+- **Database**: SQLite via async SQLAlchemy with Alembic migrations
 - **Recording**: Continuous ffmpeg recording → local segments → Google Drive upload
 - **Connection pooling**: Cached device sessions (10-min TTL) with suspension detection
 
@@ -281,6 +281,27 @@ npm run dev
 
 Open **http://localhost:5173** in your browser.
 
+## Database Migrations
+
+The backend uses [Alembic](https://alembic.sqlalchemy.org/) to manage database schema changes. Migrations run automatically on startup, so you don't need to run them manually.
+
+**Creating a new migration** (after modifying a SQLAlchemy model):
+
+```bash
+cd backend
+source .venv/bin/activate    # Windows: .venv\Scripts\Activate.ps1
+alembic revision --autogenerate -m "describe your change"
+```
+
+**Other useful commands:**
+
+```bash
+alembic upgrade head         # Apply all pending migrations
+alembic downgrade -1         # Revert the last migration
+alembic current              # Show current migration version
+alembic history              # Show migration history
+```
+
 ## Testing
 
 The backend has a comprehensive unit test suite using **pytest** with async support. Tests are fully isolated using in-memory SQLite and mocks — no running services required.
@@ -386,9 +407,13 @@ tests/
 │   │   └── models/
 │   │       ├── camera.py            # SQLAlchemy ORM model
 │   │       └── schemas.py           # Pydantic request/response schemas
+│   ├── alembic.ini                  # Alembic config
+│   ├── alembic/                     # Database migrations
+│   │   ├── env.py                   # Migration environment
+│   │   └── versions/               # Auto-generated migration scripts
 │   ├── requirements.txt
 │   ├── pytest.ini                   # pytest configuration
-│   ├── tests/                       # Unit tests (139 tests, pytest + pytest-asyncio)
+│   ├── tests/                       # Unit tests (146 tests, pytest + pytest-asyncio)
 │   └── .python-version              # pyenv 3.11.5
 ├── frontend/
 │   ├── src/

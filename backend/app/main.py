@@ -5,7 +5,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.database import init_db
 from app.api.routes.cameras import router as cameras_router
 from app.api.routes.streams import router as streams_router
 from app.api.routes.recordings import router as recordings_router
@@ -16,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
     if settings.recording_enabled:
         logger.info("Starting continuous recording...")
         await recording_manager.start()
